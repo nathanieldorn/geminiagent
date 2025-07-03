@@ -1,25 +1,18 @@
-import unittest
 from functions.get_files_info import get_files_info
+from functions.get_file_content import get_file_content
+
 '''
-class TestGetFiles(unittest.TestCase):
-
-    def calc_root(self):
-        print(get_files_info("calculator", "."))
-
-    def calc_pkg(self):
-        print(get_files_info("calculator", "pkg"))
-
-    def calc_bin(self):
-        print(get_files_info("calculator", "/bin"))
-
-    def calc_parent(self):
-        print(get_files_info("calculator", "../"))
-
-
-if __name__ == "__main__":
-    unittest.main()'''
-
+# commented out for get file contents testing
 print(get_files_info("calculator", "."))
 print(get_files_info("calculator", "pkg"))
 print(get_files_info("calculator", "/bin"))
 print(get_files_info("calculator", "../"))
+'''
+
+# commented out for additional content tests below
+#print(len(get_file_content("calculator", "lorem.txt")) <= 10000)
+#print(f'# of Chars: {len(get_file_content("calculator", "lorem.txt"))}')
+
+print(get_file_content("calculator", "main.py"))
+print(get_file_content("calculator", "pkg/calculator.py"))
+print(get_file_content("calculator", "/bin/cat"))
