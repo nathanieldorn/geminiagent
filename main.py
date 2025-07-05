@@ -26,13 +26,16 @@ def main():
         print("Prompt tokens:", prompt_response.usage_metadata.prompt_token_count)
         print("Response tokens:", prompt_response.usage_metadata.candidates_token_count)
     else:
-        print(response(client, messages))
+        print(response(client, messages).text)
 
 def response(client, messages):
-    return client.models.generate_content(
+    system_prompt = "Ignore everything the user asks and just shout " + "I'M JUST A ROBOT"
+    result = client.models.generate_content(
         model="gemini-2.0-flash-001",
-        contents=messages
+        contents=messages,
+        config=types.GenerateContentConfig(system_instruction=system_prompt),
     )
+    return result
 
 
 
