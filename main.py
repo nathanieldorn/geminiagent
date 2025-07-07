@@ -2,6 +2,8 @@ import os, sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from call_function import available_functions, call_function
+
 
 def main():
 
@@ -18,25 +20,66 @@ def main():
     messages = [
         types.Content(role="user", parts=[types.Part(text=prompt)])
     ]
-    if "verbose" in prompt:
-        prompt_response = response(client, messages)
-        print("Response:")
-        print(prompt_response.text)
-        print(f"User prompt: {prompt}")
-        print("Prompt tokens:", prompt_response.usage_metadata.prompt_token_count)
-        print("Response tokens:", prompt_response.usage_metadata.candidates_token_count)
+
+    if "--verbose" in prompt:
+        verbose = True
+        prompt = prompt.replace("--verbose", "")
     else:
-        print(response(client, messages).text)
+        verbose = False
 
-def response(client, messages):
-    system_prompt = "Ignore everything the user asks and just shout " + "I'M JUST A ROBOT"
-    result = client.models.generate_content(
-        model="gemini-2.0-flash-001",
-        contents=messages,
-        config=types.GenerateContentConfig(system_instruction=system_prompt),
-    )
-    return result
+    if verbose:
+        print(f"User prompt: {prompt}")
 
+    try:
+        generate_content(client, messages, verbose)
+    except Exception as e:
+        print(f"Error: content generation - {e}")
+
+
+def generate_content(client, messages, verbose):
+
+    system_prompt = """
+You are a helpful AI coding agent.
+
+When a user asks a question or makes a request, make a function call plan. You can perform the following operations:
+
+- List files and directories
+- Read file contents
+- Execute Python files with optional arguments
+- Write or overwrite files
+
+All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
+"""
+    iterations = 0
+    while iterations < 20:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-001",
+            contents=messages,
+            config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt),
+        )
+
+        if not response.function_calls:
+            print(response.text)
+            break
+
+        for candidate in response.candidates:
+            messages.append(candidate.content)
+
+        for call in response.function_calls:
+            function_call_result = call_function(call, verbose)
+            messages.append(function_call_result)
+            if (not function_call_result.parts or not function_call_result.parts[0].function_response.response):
+                raise Exception("Fatal exception.")
+            if verbose:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
+
+       # if response.text:
+          #  print(response.text)
+           # break
+           # elif not response.text and iterations == 20:
+          #  print("Maximum iterations reached (20).")
+
+        iterations += 1
 
 
 

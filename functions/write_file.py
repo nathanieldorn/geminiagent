@@ -1,6 +1,7 @@
 import os
-from functions.get_file_info import get_files_info
+from functions.get_files_info import get_files_info
 from functions.get_file_content import get_file_content
+from google.genai import types
 
 
 def write_file(working_directory, file_path, content):
@@ -30,3 +31,25 @@ def write_file(working_directory, file_path, content):
                 return f'Contents of "{file_path}" do not match the content passed in'
     except Exception as e:
         return f'Error: {e} for "{working_directory}", "{file_path}", and {content[:20]}...'
+
+
+def write_file_schema():
+    # build function schema/declaration
+    schema_write_file = types.FunctionDeclaration(
+        name="write_file",
+        description="Write contents to the file, constrained to the working directory.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "file_path": types.Schema(
+                    type=types.Type.STRING,
+                    description="The path of the file to be run.",
+                ),
+                "content": types.Schema(
+                    type=types.Type.STRING,
+                    description="The content to be written to a file, relative to the working directory. If not provided, state that the content must be provided.",
+                ),
+            },
+        ),
+    )
+    return schema_write_file

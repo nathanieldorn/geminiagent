@@ -1,7 +1,8 @@
 import os
 import subprocess
+from google.genai import types
 
-def run_python_file(working_directory, file_path):
+def run_python_file(working_directory, file_path, args=None):
 
     try:
         working_path = os.path.abspath(working_directory)
@@ -15,7 +16,11 @@ def run_python_file(working_directory, file_path):
         if file_path[-3:] != ".py":
             return f'Error: "{file_path}" is not a Python file'
 
-        result = subprocess.run(["python", file_path], cwd=working_path, text=True, capture_output=True, check=True, timeout=30)
+
+        command = ["uv", "run", file_path]
+        if args:
+            command.append(args)
+        result = subprocess.run(command, cwd=working_path, text=True, capture_output=True, check=True, timeout=30)
 
         if len(result.stdout) > 0:
             output = "STDOUT: " + result.stdout
@@ -30,3 +35,25 @@ def run_python_file(working_directory, file_path):
 
     except Exception as e:
         return f"Error: executing Python file: {e}"
+
+
+def run_python_file_schema():
+    # build function schema/declaration
+    schema_run_python_file = types.FunctionDeclaration(
+        name="run_python_file",
+        description="Run the specified file, constrained to the working directory.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "file_path": types.Schema(
+                    type=types.Type.STRING,
+                    description="The path of the file to be run.",
+                ),
+                "args": types.Schema(
+                    type=types.Type.STRING,
+                    description="Arguments passed to the python file."
+                )
+            },
+        ),
+    )
+    return schema_run_python_file
