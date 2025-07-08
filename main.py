@@ -58,6 +58,7 @@ All paths you provide should be relative to the working directory. You do not ne
             config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt),
         )
 
+        # break out and print text if there are no more function calls
         if not response.function_calls:
             print(response.text)
             break
@@ -65,6 +66,7 @@ All paths you provide should be relative to the working directory. You do not ne
         for candidate in response.candidates:
             messages.append(candidate.content)
 
+        # call each function and append results to the messages list, raising an exception if unsuccessful
         for call in response.function_calls:
             function_call_result = call_function(call, verbose)
             messages.append(function_call_result)
@@ -73,14 +75,7 @@ All paths you provide should be relative to the working directory. You do not ne
             if verbose:
                 print(f"-> {function_call_result.parts[0].function_response.response}")
 
-       # if response.text:
-          #  print(response.text)
-           # break
-           # elif not response.text and iterations == 20:
-          #  print("Maximum iterations reached (20).")
-
         iterations += 1
-
 
 
 if __name__ == "__main__":
